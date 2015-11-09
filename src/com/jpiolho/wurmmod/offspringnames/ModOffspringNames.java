@@ -134,7 +134,10 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable {
             return arr;
         }
 
-        List<String> newList = Arrays.asList(builtin);
+        ArrayList<String> newList = new ArrayList<String>();
+        
+        for(int i=0;i<builtin.length;i++)
+            newList.add(builtin[i]);
         
         if(!checkDuplicate) {
             newList.addAll(loadedNames);
