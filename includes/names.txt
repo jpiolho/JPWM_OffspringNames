@@ -1,0 +1,12 @@
+# One name per line in the specific groups
+
+GENERIC:
+red
+green
+blue
+
+MALE:
+peter
+
+FEMALE:
+sarah
