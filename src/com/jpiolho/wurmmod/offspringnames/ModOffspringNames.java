@@ -46,6 +46,7 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable {
         checkDuplicate = Boolean.parseBoolean(properties.getProperty("checkDuplicate",Boolean.toString(checkDuplicate)));
         
         logger.log(Level.INFO,"replaceBuiltInNames: " + replaceBuiltInNames);
+        logger.log(Level.INFO,"checkDuplicate: " + checkDuplicate);
     }
 
     
