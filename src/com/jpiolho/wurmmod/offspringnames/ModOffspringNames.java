@@ -5,7 +5,10 @@
  */
 package com.jpiolho.wurmmod.offspringnames;
 
+import com.wurmonline.server.MiscConstants;
+import com.wurmonline.server.items.ItemTypes;
 import com.wurmonline.server.questions.VillageFoundationQuestion;
+import com.wurmonline.shared.constants.ItemMaterials;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -26,13 +29,15 @@ import org.gotti.wurmunlimited.modloader.classhooks.HookManager;
 import org.gotti.wurmunlimited.modloader.classhooks.InvocationHandlerFactory;
 import org.gotti.wurmunlimited.modloader.interfaces.Configurable;
 import org.gotti.wurmunlimited.modloader.interfaces.Initable;
+import org.gotti.wurmunlimited.modloader.interfaces.ItemTemplatesCreatedListener;
 import org.gotti.wurmunlimited.modloader.interfaces.WurmMod;
+import org.gotti.wurmunlimited.modsupport.ItemTemplateBuilder;
 
 /**
  *
  * @author JPiolho
  */
-public class ModOffspringNames implements WurmMod, Configurable, Initable {
+public class ModOffspringNames implements WurmMod, Configurable, Initable,ItemTemplatesCreatedListener {
 
     
     private boolean replaceBuiltInNames = false;
@@ -208,6 +213,41 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable {
             }
             
         });
+    }
+
+    
+    private int iid_namingtag = 0;
+    @Override
+    public void onItemTemplatesCreated() {
+        try {
+            ItemTemplateBuilder builder = new ItemTemplateBuilder("jp.offspringnames.namingtag");
+
+            builder.name("naming tag","naming tags","A small piece of wood used to carve a name.");
+            //builder.modelName("model.jpmod.offspringname.decaybed.");
+            builder.descriptions("excellent", "good", "ok", "poor");
+            builder.itemTypes(new short[]{
+                ItemTypes.ITEM_TYPE_WOOD,
+                ItemTypes.ITEM_TYPE_NAMED
+           });
+
+            builder.imageNumber((short)60);
+            builder.behaviourType((short)1);
+            builder.combatDamage(0);
+            builder.decayTime(9072000L);
+            builder.dimensions(10, 2, 2);
+            builder.primarySkill((int)MiscConstants.NOID);
+            builder.bodySpaces(MiscConstants.EMPTY_BYTE_PRIMITIVE_ARRAY);
+
+            builder.difficulty(1.0f);
+            builder.weightGrams(5);
+            builder.material(ItemMaterials.MATERIAL_WOOD_PINE);
+            builder.isTraded(false);
+            builder.value(0);
+        
+            iid_namingtag = builder.build().getTemplateId();
+        } catch(IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
     
     
