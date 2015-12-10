@@ -5,8 +5,19 @@
  */
 package com.jpiolho.wurmmod.offspringnames;
 
+import com.jpiolho.wurmmod.base.ItemActionListener;
+import com.jpiolho.wurmmod.base.ListenerResult;
+import com.jpiolho.wurmmod.base.ModBase;
 import com.wurmonline.server.MiscConstants;
+import com.wurmonline.server.behaviours.Action;
+import com.wurmonline.server.behaviours.ActionEntry;
+import com.wurmonline.server.behaviours.NamingTagBehaviour;
+import com.wurmonline.server.behaviours.NoSuchBehaviourException;
+import com.wurmonline.server.creatures.Creature;
+import com.wurmonline.server.items.Item;
+import com.wurmonline.server.items.ItemList;
 import com.wurmonline.server.items.ItemTypes;
+import com.wurmonline.server.questions.Question;
 import com.wurmonline.server.questions.VillageFoundationQuestion;
 import com.wurmonline.shared.constants.ItemMaterials;
 import java.io.BufferedReader;
@@ -22,28 +33,37 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javassist.CannotCompileException;
+import javassist.ClassPool;
 import javassist.CtClass;
+import javassist.CtMethod;
+import javassist.CtNewConstructor;
+import javassist.CtNewMethod;
 import javassist.CtPrimitiveType;
 import javassist.bytecode.Descriptor;
+import javassist.expr.ExprEditor;
+import javassist.expr.MethodCall;
 import org.gotti.wurmunlimited.modloader.classhooks.HookManager;
 import org.gotti.wurmunlimited.modloader.classhooks.InvocationHandlerFactory;
 import org.gotti.wurmunlimited.modloader.interfaces.Configurable;
 import org.gotti.wurmunlimited.modloader.interfaces.Initable;
 import org.gotti.wurmunlimited.modloader.interfaces.ItemTemplatesCreatedListener;
+import org.gotti.wurmunlimited.modloader.interfaces.PreInitable;
 import org.gotti.wurmunlimited.modloader.interfaces.WurmMod;
 import org.gotti.wurmunlimited.modsupport.ItemTemplateBuilder;
+import org.gotti.wurmunlimited.modsupport.actions.ModActions;
 
 /**
  *
  * @author JPiolho
  */
-public class ModOffspringNames implements WurmMod, Configurable, Initable,ItemTemplatesCreatedListener {
+public class ModOffspringNames implements WurmMod, Configurable, Initable, PreInitable,ItemTemplatesCreatedListener {
 
     
     private boolean replaceBuiltInNames = false;
     private boolean checkDuplicate = true;
     
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+    private static Logger logger = Logger.getLogger(ModOffspringNames.class.getName());
     
     @Override
     public void configure(Properties properties) {
@@ -216,22 +236,24 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable,ItemTe
     }
 
     
-    private int iid_namingtag = 0;
+    public static int iid_namingtag = 0;
     @Override
     public void onItemTemplatesCreated() {
+       
+        new NamingTagBehaviour();
+        
         try {
             ItemTemplateBuilder builder = new ItemTemplateBuilder("jp.offspringnames.namingtag");
 
             builder.name("naming tag","naming tags","A small piece of wood used to carve a name.");
-            //builder.modelName("model.jpmod.offspringname.decaybed.");
+            builder.modelName("model.jpmod.offspringname.namingtag.");
             builder.descriptions("excellent", "good", "ok", "poor");
             builder.itemTypes(new short[]{
-                ItemTypes.ITEM_TYPE_WOOD,
-                ItemTypes.ITEM_TYPE_NAMED
+                ItemTypes.ITEM_TYPE_WOOD
            });
 
             builder.imageNumber((short)60);
-            builder.behaviourType((short)1);
+            builder.behaviourType(NamingTagBehaviour.ID);
             builder.combatDamage(0);
             builder.decayTime(9072000L);
             builder.dimensions(10, 2, 2);
@@ -239,19 +261,109 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable,ItemTe
             builder.bodySpaces(MiscConstants.EMPTY_BYTE_PRIMITIVE_ARRAY);
 
             builder.difficulty(1.0f);
-            builder.weightGrams(5);
+            builder.weightGrams(500);
             builder.material(ItemMaterials.MATERIAL_WOOD_PINE);
-            builder.isTraded(false);
-            builder.value(0);
+            builder.isTraded(true);
+            builder.value(50);
         
             iid_namingtag = builder.build().getTemplateId();
         } catch(IOException ex) {
             throw new RuntimeException(ex);
         }
     }
+
+    public static boolean action(Action act, Creature performer, Item source, Creature target, short action, float counter) {
+        
+        try {
+        if(source.getTemplateId() == iid_namingtag)
+            if(((NamingTagBehaviour)source.getBehaviour()).action(act, performer, source, target, action, counter))
+                return true;
+        }
+        catch(NoSuchBehaviourException ex)
+        {
+            return false;
+        }
+        
+        
+        return false;
+    }
+    
+    public static ActionEntry actionCarveName,actionTag;
+    public static Class classCarvingNameQuestion;
+    
+    @Override
+    public void preInit() {
+        
+        
+        ModActions.init();
+        
+        actionCarveName = ActionEntry.createEntry((short)ModActions.getNextActionId(), "Carve name", "carving name",new int[] {23});
+        ModActions.registerAction(actionCarveName);     
+        
+        actionTag = ActionEntry.createEntry((short)ModActions.getNextActionId(), "Tag", "tagging",new int[] {23});
+        ModActions.registerAction(actionTag);    
+        
+        
+        try {
+            
+            ClassPool cpool = HookManager.getInstance().getClassPool();
+            //  List getBehavioursFor(Creature performer, Item source, Item target) {
+
+            String descriptor = Descriptor.ofMethod(cpool.get("java.util.List"), new CtClass[] {
+                cpool.get("com.wurmonline.server.creatures.Creature"),
+                cpool.get("com.wurmonline.server.items.Item"),
+                cpool.get("com.wurmonline.server.creatures.Creature"),
+            });
+            
+            
+            CtClass cClass = cpool.get("com.wurmonline.server.behaviours.CreatureBehaviour"); 
+            CtMethod method = cClass.getMethod("getBehavioursFor", descriptor);
+            
+            method.insertAfter("{" +
+                    "if(subject.getTemplateId() == " + ModOffspringNames.class.getName() + ".iid_namingtag) {" +
+                        "$_.add(" + ModOffspringNames.class.getName() + ".actionTag);" +
+                    "}" +
+            "}");
+        } 
+        catch(Exception ex)
+        {
+            logger.log(Level.SEVERE, "Compile code", ex);
+        }
+        
+        try {
+            
+            ClassPool cpool = HookManager.getInstance().getClassPool();
+            
+            String descriptor = Descriptor.ofMethod(CtClass.booleanType, new CtClass[] {
+                cpool.get("com.wurmonline.server.behaviours.Action"),
+                cpool.get("com.wurmonline.server.creatures.Creature"),
+                cpool.get("com.wurmonline.server.items.Item"),
+                cpool.get("com.wurmonline.server.creatures.Creature"),
+                CtClass.shortType,
+                CtClass.floatType
+            });
+            
+            
+            CtClass cClass = cpool.get("com.wurmonline.server.behaviours.CreatureBehaviour"); 
+            CtMethod method = cClass.getMethod("action", descriptor);
+            
+            method.insertAfter( "{" +
+                                    "if(" + ModOffspringNames.class.getName() + ".action($$)) {" +
+                                        "return true;" +
+                                    "}" +
+                                "}");
+            
+        } 
+        catch(Exception ex)
+        {
+            logger.log(Level.SEVERE, "Compile code", ex);
+        }
+    }
     
     
     
+
+
     
     
 }
