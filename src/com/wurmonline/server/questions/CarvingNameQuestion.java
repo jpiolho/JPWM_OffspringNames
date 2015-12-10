@@ -10,7 +10,6 @@ import com.wurmonline.server.NoSuchItemException;
 import com.wurmonline.server.behaviours.NamingTagBehaviour;
 import com.wurmonline.server.creatures.Creature;
 import com.wurmonline.server.creatures.ModOffspringNamesCreaturesProxy;
-import com.wurmonline.server.creatures.Offspring;
 import com.wurmonline.server.items.Item;
 import java.util.Properties;
 
@@ -66,11 +65,6 @@ public class CarvingNameQuestion extends Question {
             
             
             String name = properties.getProperty("answer").trim();
-            if(containsIllegalCharacters(name)) {
-                getResponder().getCommunicator().sendNormalServerMessage("There are certain illegal characters that you don't know how to carve."); 
-                return;
-            }
-            
             if(name.length() == 0) {
                 getResponder().getCommunicator().sendNormalServerMessage("You decide not to carve right now.");
                 return;
@@ -81,7 +75,11 @@ public class CarvingNameQuestion extends Question {
                 return;
             }
             
-            
+            if(containsIllegalCharacters(name)) {
+                getResponder().getCommunicator().sendNormalServerMessage("There are certain illegal characters that you don't know how to carve."); 
+                return;
+            }
+                        
             item.setDescription(name);
             getResponder().getCommunicator().sendNormalServerMessage("You carve '" + name + "' on the naming tag.");
         }

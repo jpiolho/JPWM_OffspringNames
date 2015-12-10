@@ -7,21 +7,18 @@ package com.wurmonline.server.behaviours;
 
 import com.jpiolho.wurmmod.offspringnames.ModOffspringNames;
 import com.wurmonline.server.Items;
+import com.wurmonline.server.LoginHandler;
 import com.wurmonline.server.creatures.Creature;
-import com.wurmonline.server.creatures.CreatureStatus;
 import com.wurmonline.server.creatures.CreatureTemplateIds;
-import com.wurmonline.server.creatures.Creatures;
 import com.wurmonline.server.creatures.ModOffspringNamesCreaturesProxy;
 import com.wurmonline.server.items.Item;
 import com.wurmonline.server.items.ItemList;
 import com.wurmonline.server.questions.CarvingNameQuestion;
-import com.wurmonline.server.skills.SkillList;
+import com.wurmonline.server.villages.Village;
 import com.wurmonline.server.zones.Zone;
 import com.wurmonline.server.zones.Zones;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -114,18 +111,51 @@ public class NamingTagBehaviour extends ItemBehaviour {
                 return true;
             }
             
-            if(target.getTemplate().getTemplateId() != CreatureTemplateIds.HORSE_CID) {
-                performer.getCommunicator().sendNormalServerMessage("You can only use this tag on horses.");
-                return true;
-            }
             
             if(!target.getNameWithoutPrefixes().equalsIgnoreCase(target.getTemplate().getName())) {
                 performer.getCommunicator().sendNormalServerMessage("This animal has already been tagged.");
                 return true;
             }
             
+
+            int id = target.getTemplate().getTemplateId();
+            if(!( 
+                (ModOffspringNames.allowTaggingHorses() && target.isHorse()) ||
+                (ModOffspringNames.allowTaggingCowBull() && (id == CreatureTemplateIds.CALF_CID || id == CreatureTemplateIds.COW_BROWN_CID || id == CreatureTemplateIds.BULL_CID))
+            )) {
+                performer.getCommunicator().sendNormalServerMessage("You cannot tag this type of animal.");
+                return true;
+            }
+            
+            if(target.getDominator()!= null && target.getDominator() != performer) {
+                performer.getCommunicator().sendNormalServerMessage("This animal has an owner, you cannot tag someone elses animal.");
+                return true;
+            }
+            
+            if(target.isBranded()) {
+                Village playerVillage = performer.getCitizenVillage();
+                Village brandVillage = target.getBrandVillage();
+                
+                if(playerVillage != brandVillage) {
+                    performer.getCommunicator().sendNormalServerMessage("It would be really bad to tag an animal belonging to another village.");
+                    return true;
+                }
+            }
+            
+            if(target.isCaredFor()) {
+                if(target.getCareTakerId() != performer.getWurmId())
+                {
+                    performer.getCommunicator().sendNormalServerMessage("It would be really mean to tag an animal being cared for by another person.");
+                    return true;
+                }
+            }
+            
+            
+            
+            
+            
             String previousName = target.getNameWithoutPrefixes();
-            String newName = source.getDescription();
+            String newName = LoginHandler.raiseFirstLetter(source.getDescription());
             try {
                 target.setName(newName);
                 target.save();
@@ -142,7 +172,7 @@ public class NamingTagBehaviour extends ItemBehaviour {
                 return true;
             }
             
-            performer.getCommunicator().sendNormalServerMessage("You tag the " + previousName + ".");
+            performer.getCommunicator().sendNormalServerMessage("You tag the " + previousName.toLowerCase() + ".");
             
             
             

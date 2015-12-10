@@ -5,20 +5,20 @@
  */
 package com.jpiolho.wurmmod.offspringnames;
 
-import com.jpiolho.wurmmod.base.ItemActionListener;
-import com.jpiolho.wurmmod.base.ListenerResult;
-import com.jpiolho.wurmmod.base.ModBase;
 import com.wurmonline.server.MiscConstants;
 import com.wurmonline.server.behaviours.Action;
 import com.wurmonline.server.behaviours.ActionEntry;
 import com.wurmonline.server.behaviours.NamingTagBehaviour;
 import com.wurmonline.server.behaviours.NoSuchBehaviourException;
 import com.wurmonline.server.creatures.Creature;
+import com.wurmonline.server.items.AdvancedCreationEntry;
+import com.wurmonline.server.items.CreationCategories;
+import com.wurmonline.server.items.CreationEntryCreator;
+import com.wurmonline.server.items.CreationRequirement;
 import com.wurmonline.server.items.Item;
 import com.wurmonline.server.items.ItemList;
 import com.wurmonline.server.items.ItemTypes;
-import com.wurmonline.server.questions.Question;
-import com.wurmonline.server.questions.VillageFoundationQuestion;
+import com.wurmonline.server.skills.SkillList;
 import com.wurmonline.shared.constants.ItemMaterials;
 import java.io.BufferedReader;
 import java.io.File;
@@ -28,8 +28,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,9 +35,6 @@ import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
-import javassist.CtNewConstructor;
-import javassist.CtNewMethod;
-import javassist.CtPrimitiveType;
 import javassist.bytecode.Descriptor;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
@@ -49,6 +44,7 @@ import org.gotti.wurmunlimited.modloader.interfaces.Configurable;
 import org.gotti.wurmunlimited.modloader.interfaces.Initable;
 import org.gotti.wurmunlimited.modloader.interfaces.ItemTemplatesCreatedListener;
 import org.gotti.wurmunlimited.modloader.interfaces.PreInitable;
+import org.gotti.wurmunlimited.modloader.interfaces.ServerStartedListener;
 import org.gotti.wurmunlimited.modloader.interfaces.WurmMod;
 import org.gotti.wurmunlimited.modsupport.ItemTemplateBuilder;
 import org.gotti.wurmunlimited.modsupport.actions.ModActions;
@@ -57,11 +53,26 @@ import org.gotti.wurmunlimited.modsupport.actions.ModActions;
  *
  * @author JPiolho
  */
-public class ModOffspringNames implements WurmMod, Configurable, Initable, PreInitable,ItemTemplatesCreatedListener {
+public class ModOffspringNames implements WurmMod, Configurable, Initable, PreInitable,ServerStartedListener, ItemTemplatesCreatedListener {
 
     
-    private boolean replaceBuiltInNames = false;
-    private boolean checkDuplicate = true;
+    private static boolean replaceBuiltInNames = false;
+    private static boolean checkDuplicate = true;
+    private static boolean namingTag = true;
+    private static boolean namingTagCrafting = true;
+    private static boolean allowHorse = true;
+    private static boolean allowCowBull = true;
+    private static int nameMethod = 1;
+        
+    
+    public static boolean allowTaggingHorses() {
+        return allowHorse;
+    }
+    
+    public static boolean allowTaggingCowBull() {
+        return allowCowBull;
+    }
+    
     
     private static Logger logger = Logger.getLogger(ModOffspringNames.class.getName());
     
@@ -69,9 +80,21 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable, PreIn
     public void configure(Properties properties) {
         replaceBuiltInNames = Boolean.parseBoolean(properties.getProperty("replaceBuiltInNames",Boolean.toString(replaceBuiltInNames)));
         checkDuplicate = Boolean.parseBoolean(properties.getProperty("checkDuplicate",Boolean.toString(checkDuplicate)));
+        namingTag = Boolean.parseBoolean(properties.getProperty("namingTag",Boolean.toString(namingTag)));
+        namingTagCrafting = Boolean.parseBoolean(properties.getProperty("namingTagCrafting",Boolean.toString(namingTagCrafting)));
+        allowHorse = Boolean.parseBoolean(properties.getProperty("allowHorse",Boolean.toString(allowHorse)));
+        allowCowBull = Boolean.parseBoolean(properties.getProperty("allowCowBull",Boolean.toString(allowCowBull)));
+        nameMethod = Integer.parseInt(properties.getProperty("nameMethod",Integer.toString(nameMethod)));
         
-        logger.log(Level.INFO,"replaceBuiltInNames: " + replaceBuiltInNames);
-        logger.log(Level.INFO,"checkDuplicate: " + checkDuplicate);
+        logger.log(Level.INFO, " " + System.lineSeparator() +
+                "\treplaceBuiltInNames: " + replaceBuiltInNames + System.lineSeparator() +
+                "\tcheckDuplicate: " + checkDuplicate + System.lineSeparator() +
+                "\tnamingTag: " + namingTag + System.lineSeparator() +
+                "\tnamingTagCrafting: " + namingTagCrafting + System.lineSeparator() +
+                "\tallowHorse: " + allowHorse + System.lineSeparator() +
+                "\tallowCowBull: " + allowCowBull + System.lineSeparator() +
+                "\tnameMethod: " + nameMethod + System.lineSeparator()
+        );
     }
 
     
@@ -249,7 +272,9 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable, PreIn
             builder.modelName("model.jpmod.offspringname.namingtag.");
             builder.descriptions("excellent", "good", "ok", "poor");
             builder.itemTypes(new short[]{
-                ItemTypes.ITEM_TYPE_WOOD
+                ItemTypes.ITEM_TYPE_WOOD,
+                ItemTypes.ITEM_TYPE_IMPROVEITEM,
+                ItemTypes.ITEM_TYPE_MASSPRODUCTION
            });
 
             builder.imageNumber((short)60);
@@ -261,7 +286,7 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable, PreIn
             builder.bodySpaces(MiscConstants.EMPTY_BYTE_PRIMITIVE_ARRAY);
 
             builder.difficulty(1.0f);
-            builder.weightGrams(500);
+            builder.weightGrams(100);
             builder.material(ItemMaterials.MATERIAL_WOOD_PINE);
             builder.isTraded(true);
             builder.value(50);
@@ -357,6 +382,49 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable, PreIn
         catch(Exception ex)
         {
             logger.log(Level.SEVERE, "Compile code", ex);
+        }
+        
+        
+        if(nameMethod != 0)
+            return;
+        
+        try {
+            
+            ClassPool cpool = HookManager.getInstance().getClassPool();
+            //  List getBehavioursFor(Creature performer, Item source, Item target) {
+
+            String descriptor = Descriptor.ofMethod(CtClass.booleanType, new CtClass[] {
+                CtClass.booleanType
+            });
+            
+            
+            CtClass cClass = cpool.get("com.wurmonline.server.creatures.Creature"); 
+            CtMethod method = cClass.getMethod("checkPregnancy", descriptor);
+            
+            method.instrument(new ExprEditor() {
+
+                int step = 0;
+           
+                @Override
+                public void edit(MethodCall m) throws CannotCompileException {
+                    
+                    if(m.getClassName().equals("com.wurmonline.server.creatures.Creature") && m.getMethodName().equals("isHorse"))
+                    {
+                        m.replace("$_ = this.isHorse() && 1 == 0;");
+                    }
+                }
+            });
+        } 
+        catch(Exception ex)
+        {
+            logger.log(Level.SEVERE, "Compile code", ex);
+        }
+    }
+
+    @Override
+    public void onServerStarted() {
+        if(iid_namingtag > 0 && namingTagCrafting) {
+            CreationEntryCreator.createSimpleEntry(SkillList.CARPENTRY_FINE, ItemList.scrapwood, ItemList.clothString, iid_namingtag, true, true, 0.5f, false, false, CreationCategories.WRITING);
         }
     }
     
