@@ -35,9 +35,11 @@ import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
+import javassist.NotFoundException;
 import javassist.bytecode.Descriptor;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
+import org.gotti.wurmunlimited.modloader.classhooks.HookException;
 import org.gotti.wurmunlimited.modloader.classhooks.HookManager;
 import org.gotti.wurmunlimited.modloader.classhooks.InvocationHandlerFactory;
 import org.gotti.wurmunlimited.modloader.interfaces.Configurable;
@@ -353,9 +355,9 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable, PreIn
                     "}" +
             "}");
         } 
-        catch(Exception ex)
+        catch(NotFoundException | CannotCompileException ex)
         {
-            logger.log(Level.SEVERE, "Compile code", ex);
+            throw new HookException(ex);
         }
         
         try {
@@ -382,9 +384,9 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable, PreIn
                                 "}");
             
         } 
-        catch(Exception ex)
+        catch(NotFoundException | CannotCompileException ex)
         {
-            logger.log(Level.SEVERE, "Compile code", ex);
+            throw new HookException(ex);
         }
         
         
@@ -418,9 +420,9 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable, PreIn
                 }
             });
         } 
-        catch(Exception ex)
+        catch(NotFoundException | CannotCompileException ex)
         {
-            logger.log(Level.SEVERE, "Compile code", ex);
+            throw new HookException(ex);
         }
     }
 
