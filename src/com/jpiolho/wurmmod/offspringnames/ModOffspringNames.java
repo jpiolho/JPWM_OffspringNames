@@ -274,7 +274,8 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable, PreIn
             builder.itemTypes(new short[]{
                 ItemTypes.ITEM_TYPE_WOOD,
                 ItemTypes.ITEM_TYPE_IMPROVEITEM,
-                ItemTypes.ITEM_TYPE_MASSPRODUCTION
+                ItemTypes.ITEM_TYPE_REPAIRABLE,
+                ItemTypes.ITEM_TYPE_MISSION
            });
 
             builder.imageNumber((short)60);
