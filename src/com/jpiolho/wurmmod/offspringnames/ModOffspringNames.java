@@ -217,58 +217,7 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable, PreIn
         ModActions.registerAction(actionTag);   
         
         
-        
-        
-        
         readNameFile();
-        
-        
-        HookManager.getInstance().registerHook("com.wurmonline.server.creatures.Offspring", "createMaleNames", "()[Ljava/lang/String;", new InvocationHandlerFactory() {
-
-            @Override
-            public InvocationHandler createInvocationHandler() {
-                return new InvocationHandler() {
-
-                    @Override
-                    public Object invoke(Object o, Method method, Object[] os) throws Throwable {
-                        return getNames(namesMale,(String[])method.invoke(o, os));
-                    }
-                };
-            }
-            
-        });
-        
-        
-        HookManager.getInstance().registerHook("com.wurmonline.server.creatures.Offspring", "createFemaleNames", "()[Ljava/lang/String;", new InvocationHandlerFactory() {
-
-            @Override
-            public InvocationHandler createInvocationHandler() {
-                return new InvocationHandler() {
-
-                    @Override
-                    public Object invoke(Object o, Method method, Object[] os) throws Throwable {
-                        return getNames(namesFemale,(String[])method.invoke(o, os));
-                    }
-                };
-            }
-            
-        });
-        
-        
-        HookManager.getInstance().registerHook("com.wurmonline.server.creatures.Offspring", "createGenericNames", "()[Ljava/lang/String;", new InvocationHandlerFactory() {
-
-            @Override
-            public InvocationHandler createInvocationHandler() {
-                return new InvocationHandler() {
-
-                    @Override
-                    public Object invoke(Object o, Method method, Object[] os) throws Throwable {
-                        return getNames(namesGeneric,(String[])method.invoke(o, os));
-                    }
-                };
-            }
-            
-        });
     }
 
     
@@ -333,6 +282,53 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable, PreIn
     @Override
     public void preInit() {
         ModActions.init();
+        
+        HookManager.getInstance().registerHook("com.wurmonline.server.creatures.Offspring", "createMaleNames", "()[Ljava/lang/String;", new InvocationHandlerFactory() {
+
+            @Override
+            public InvocationHandler createInvocationHandler() {
+                return new InvocationHandler() {
+
+                    @Override
+                    public Object invoke(Object o, Method method, Object[] os) throws Throwable {
+                        return getNames(namesMale,(String[])method.invoke(o, os));
+                    }
+                };
+            }
+            
+        });
+        
+        
+        HookManager.getInstance().registerHook("com.wurmonline.server.creatures.Offspring", "createFemaleNames", "()[Ljava/lang/String;", new InvocationHandlerFactory() {
+
+            @Override
+            public InvocationHandler createInvocationHandler() {
+                return new InvocationHandler() {
+
+                    @Override
+                    public Object invoke(Object o, Method method, Object[] os) throws Throwable {
+                        return getNames(namesFemale,(String[])method.invoke(o, os));
+                    }
+                };
+            }
+            
+        });
+        
+        
+        HookManager.getInstance().registerHook("com.wurmonline.server.creatures.Offspring", "createGenericNames", "()[Ljava/lang/String;", new InvocationHandlerFactory() {
+
+            @Override
+            public InvocationHandler createInvocationHandler() {
+                return new InvocationHandler() {
+
+                    @Override
+                    public Object invoke(Object o, Method method, Object[] os) throws Throwable {
+                        return getNames(namesGeneric,(String[])method.invoke(o, os));
+                    }
+                };
+            }
+            
+        });
         
         try {
             
