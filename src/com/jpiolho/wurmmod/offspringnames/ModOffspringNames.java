@@ -207,6 +207,17 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable, PreIn
     @Override
     public void init() {
         
+        // Register actions
+        actionCarveName = ActionEntry.createEntry((short)ModActions.getNextActionId(), "Carve name", "carving name",new int[] {23});
+        ModActions.registerAction(actionCarveName);     
+
+        actionTag = ActionEntry.createEntry((short)ModActions.getNextActionId(), "Tag", "tagging",new int[] {23});
+        ModActions.registerAction(actionTag);   
+        
+        
+        
+        
+        
         readNameFile();
         
         
@@ -319,16 +330,7 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable, PreIn
     
     @Override
     public void preInit() {
-        
-        
         ModActions.init();
-        
-        actionCarveName = ActionEntry.createEntry((short)ModActions.getNextActionId(), "Carve name", "carving name",new int[] {23});
-        ModActions.registerAction(actionCarveName);     
-        
-        actionTag = ActionEntry.createEntry((short)ModActions.getNextActionId(), "Tag", "tagging",new int[] {23});
-        ModActions.registerAction(actionTag);    
-        
         
         try {
             
@@ -424,6 +426,8 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable, PreIn
 
     @Override
     public void onServerStarted() {
+        
+        
         if(iid_namingtag > 0 && namingTagCrafting) {
             CreationEntryCreator.createSimpleEntry(SkillList.CARPENTRY_FINE, ItemList.scrapwood, ItemList.clothString, iid_namingtag, true, true, 0.5f, false, false, CreationCategories.WRITING);
         }
