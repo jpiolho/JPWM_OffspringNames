@@ -252,7 +252,7 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable, PreIn
             builder.weightGrams(100);
             builder.material(ItemMaterials.MATERIAL_WOOD_PINE);
             builder.isTraded(true);
-            builder.value(50);
+            builder.value(10);
         
             iid_namingtag = builder.build().getTemplateId();
         } catch(IOException ex) {
