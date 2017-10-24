@@ -43,7 +43,7 @@ public class NamingTagBehaviour extends ItemBehaviour {
     }
     
     @Override
-    List<ActionEntry> getBehavioursFor(Creature performer, Item source, Item target) {
+    public List<ActionEntry> getBehavioursFor(Creature performer, Item source, Item target) {
         List<ActionEntry> toReturn = super.getBehavioursFor(performer, source, target);
         
         for(ActionEntry action : toReturn) {
@@ -88,14 +88,14 @@ public class NamingTagBehaviour extends ItemBehaviour {
     }
 
     @Override
-    boolean action(Action act, Creature performer, Item target, short action, float counter) {
+    public boolean action(Action act, Creature performer, Item target, short action, float counter) {
         if(!this.performNamingTagAction(act, performer, null, target, action, counter))
             return super.action(act, performer, target, action, counter);
         return true;
     }
 
     @Override
-    boolean action(Action act, Creature performer, Item source, Item target, short action, float counter) {
+    public boolean action(Action act, Creature performer, Item source, Item target, short action, float counter) {
         if(!this.performNamingTagAction(act, performer, source, target, action, counter))
             return super.action(act, performer, source, target, action,counter);
         return true;
@@ -121,7 +121,9 @@ public class NamingTagBehaviour extends ItemBehaviour {
             int id = target.getTemplate().getTemplateId();
             if(!( 
                 (ModOffspringNames.allowTaggingHorses() && target.isHorse()) ||
-                (ModOffspringNames.allowTaggingCowBull() && (id == CreatureTemplateIds.CALF_CID || id == CreatureTemplateIds.COW_BROWN_CID || id == CreatureTemplateIds.BULL_CID))
+                (ModOffspringNames.allowTaggingCowBull() && (id == CreatureTemplateIds.CALF_CID || id == CreatureTemplateIds.COW_BROWN_CID || id == CreatureTemplateIds.BULL_CID)) ||
+                (ModOffspringNames.allowTaggingBisons() && (id == CreatureTemplateIds.BISON_CID)) ||
+                (ModOffspringNames.allowTaggingDogs() && (id == CreatureTemplateIds.DOG_CID))
             )) {
                 performer.getCommunicator().sendNormalServerMessage("You cannot tag this type of animal.");
                 return true;
