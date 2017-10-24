@@ -64,15 +64,25 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable, PreIn
     private static boolean namingTagCrafting = true;
     private static boolean allowHorse = true;
     private static boolean allowCowBull = true;
+    private static boolean allowBisons = true;
+    private static boolean allowDogs = true;
     private static int nameMethod = 1;
-        
-    
+
+
     public static boolean allowTaggingHorses() {
         return allowHorse;
     }
     
     public static boolean allowTaggingCowBull() {
         return allowCowBull;
+    }
+
+    public static boolean allowTaggingBisons() {
+        return allowBisons;
+    }
+
+    public static boolean allowTaggingDogs() {
+        return allowBisons;
     }
     
     
@@ -86,6 +96,8 @@ public class ModOffspringNames implements WurmMod, Configurable, Initable, PreIn
         namingTagCrafting = Boolean.parseBoolean(properties.getProperty("namingTagCrafting",Boolean.toString(namingTagCrafting)));
         allowHorse = Boolean.parseBoolean(properties.getProperty("allowHorse",Boolean.toString(allowHorse)));
         allowCowBull = Boolean.parseBoolean(properties.getProperty("allowCowBull",Boolean.toString(allowCowBull)));
+        allowBisons = Boolean.parseBoolean(properties.getProperty("allowBison",Boolean.toString(allowBisons)));
+        allowDogs = Boolean.parseBoolean(properties.getProperty("allowDog",Boolean.toString(allowDogs)));
         nameMethod = Integer.parseInt(properties.getProperty("nameMethod",Integer.toString(nameMethod)));
         
         logger.log(Level.INFO, " " + System.lineSeparator() +
